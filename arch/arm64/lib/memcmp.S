@@ -3,7 +3,7 @@
  * Copyright (c) 2013-2021, Arm Limited.
  *
  * Adapted from the original at:
- * https://github.com/ARM-software/optimized-routines/blob/e823e3abf5f89ecb/string/aarch64/memcmp.S
+ * https://github.com/ARM-software/optimized-routines/blob/7a9fd1603e/string/aarch64/memcmp.S
  */
 
 #include <linux/linkage.h>
@@ -34,6 +34,7 @@
 #define src2end	x8
 
 SYM_FUNC_START_WEAK_PI(memcmp)
+
 	cmp	limit, 16
 	b.lo	L(less16)
 	ldp	data1, data3, [src1]
@@ -125,12 +126,14 @@ L(less2):
 	sub	result, data1w, data2w
 L(return_zero):
 	ret
+
 L(loop_align):
 	ldp	data1, data3, [src1, 16]
 	ldp	data2, data4, [src2, 16]
 	cmp	data1, data2
 	ccmp	data3, data4, 0, eq
 	b.ne	L(return2)
+
 	/* Align src2 and adjust src1, src2 and limit.  */
 	and	tmp, src2, 15
 	sub	tmp, tmp, 16
@@ -138,6 +141,7 @@ L(loop_align):
 	add	limit, limit, tmp
 	sub	src1, src1, tmp
 	sub	limit, limit, 64 + 16
+
 	.p2align 4
 L(loop64):
 	ldr	q0, [src1, 16]
@@ -160,9 +164,11 @@ L(loop64):
 	fmov	tmp, d0
 	ccmp	tmp, 0, 0, hi
 	b.eq	L(loop64)
+
 	/* If equal, process last 1-64 bytes using scalar loop.  */
 	add	limit, limit, 64 + 16
 	cbz	tmp, L(last64)
+
 	/* Determine the 8-byte aligned offset of the first difference.  */
 #ifdef __AARCH64EB__
 	rev16	tmp, tmp
