@@ -464,12 +464,9 @@ static void msm_restart_prepare(const char *cmd)
 		} else {
 			__raw_writel(0x77665501, restart_reason);
 		}
-
-		if (reason && nvmem_cell)
-			nvmem_cell_write(nvmem_cell, &reason, sizeof(reason));
-		else
-			qpnp_pon_set_restart_reason(
-				(enum pon_restart_reason)reason);
+	} else {
+		reason = PON_RESTART_REASON_NORMAL;
+		__raw_writel(0x77665501, restart_reason);
 	}
 
 	/*outer_flush_all is not supported by 64bit kernel*/
