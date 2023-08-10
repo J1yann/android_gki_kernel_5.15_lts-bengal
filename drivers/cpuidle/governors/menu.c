@@ -21,7 +21,7 @@
 
 #include "gov.h"
 
-#define BUCKETS 6
+#define BUCKETS 12
 #define INTERVAL_SHIFT 3
 #define INTERVALS (1UL << INTERVAL_SHIFT)
 #define RESOLUTION 1024
@@ -116,8 +116,7 @@ static void menu_update(struct cpuidle_driver *drv, struct cpuidle_device *dev);
  * of points is below a threshold. If it is... then use the
  * average of these 8 points as the estimated value.
  */
-static unsigned int get_typical_interval(struct menu_device *data,
-					 unsigned int predicted_us)
+static unsigned int get_typical_interval(struct menu_device *data)
 {
 	int i, divisor;
 	unsigned int min, max, thresh, avg;
@@ -145,11 +144,7 @@ again:
 		}
 	}
 
-	/*
-	 * If the result of the computation is going to be discarded anyway,
-	 * avoid the computation altogether.
-	 */
-	if (min >= predicted_us)
+	if (!max)
 		return UINT_MAX;
 
 	if (divisor == INTERVALS)
@@ -217,7 +212,6 @@ static int menu_select(struct cpuidle_driver *drv, struct cpuidle_device *dev,
 {
 	struct menu_device *data = this_cpu_ptr(&menu_devices);
 	s64 latency_req = cpuidle_governor_latency_req(dev->cpu);
-	unsigned int predicted_us;
 	u64 predicted_ns;
 	ktime_t delta, delta_tick;
 	int i, idx;
@@ -226,6 +220,8 @@ static int menu_select(struct cpuidle_driver *drv, struct cpuidle_device *dev,
 		menu_update(drv, dev);
 		data->needs_update = 0;
 	}
+
+	nr_iowaiters = nr_iowait_cpu(dev->cpu);
 
 	/* Find the shortest expected idle interval. */
 	predicted_ns = get_typical_interval(data) * NSEC_PER_USEC;
@@ -240,7 +236,7 @@ static int menu_select(struct cpuidle_driver *drv, struct cpuidle_device *dev,
 		}
 
 		data->next_timer_ns = delta;
-		data->bucket = which_bucket(data->next_timer_ns);
+		data->bucket = which_bucket(data->next_timer_ns, nr_iowaiters);
 
 		/* Round up the result for half microseconds. */
 		timer_us = div_u64((RESOLUTION * DECAY * NSEC_PER_USEC) / 2 +
@@ -258,12 +254,8 @@ static int menu_select(struct cpuidle_driver *drv, struct cpuidle_device *dev,
 		 */
 		data->next_timer_ns = KTIME_MAX;
 		delta_tick = TICK_NSEC / 2;
-		data->bucket = which_bucket(KTIME_MAX);
+		data->bucket = which_bucket(KTIME_MAX, nr_iowaiters);
 	}
-	data->next_timer_ns = delta;
-
-	nr_iowaiters = nr_iowait_cpu(dev->cpu);
-	data->bucket = which_bucket(data->next_timer_ns, nr_iowaiters);
 
 	if (unlikely(drv->state_count <= 1 || latency_req == 0) ||
 	    ((data->next_timer_ns < drv->states[1].target_residency_ns ||
@@ -277,16 +269,6 @@ static int menu_select(struct cpuidle_driver *drv, struct cpuidle_device *dev,
 		*stop_tick = !(drv->states[0].flags & CPUIDLE_FLAG_POLLING);
 		return 0;
 	}
-
-	/* Round up the result for half microseconds. */
-	predicted_us = div_u64(data->next_timer_ns *
-			       data->correction_factor[data->bucket] +
-			       (RESOLUTION * DECAY * NSEC_PER_USEC) / 2,
-			       RESOLUTION * DECAY * NSEC_PER_USEC);
-	/* Use the lowest expected idle interval to pick the idle state. */
-	predicted_ns = (u64)min(predicted_us,
-				get_typical_interval(data, predicted_us)) *
-				NSEC_PER_USEC;
 
 	if (tick_nohz_tick_stopped()) {
 		/*
