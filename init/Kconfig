@@ -201,11 +201,21 @@ config LOCALVERSION_AUTO
 
 	  which is done within the script "scripts/setlocalversion".)
 
-config FACTORY_BUILD
-	bool "Build production-ready version of vendor modules"
-	default y
+menuconfig UNAME_OVERRIDE
+	bool "Override uname output for specific processes"
 	help
-	  Whenever you want to build production (factory) version of vendor modules
+	  This will modify struct new_utsname->release string's return value
+	  to another string on a specified process.
+
+if UNAME_OVERRIDE
+
+config UNAME_OVERRIDE_TARGET
+	string "Target process' cmdline for uname override"
+
+config UNAME_OVERRIDE_STRING
+	string "New uname's release string for uname override"
+
+endif
 
 config BUILD_SALT
 	string "Build ID Salt"
