@@ -1502,4 +1502,11 @@ config QCOM_SECURE_HIBERNATION
 	  pages at the kernel.
 	  If not sure, say N.
 
+config QCOM_SERIAL_NUM
+	tristate "SERIAL_NUM vendor driver"
+	help
+	  JTag Fuse driver
+
+	  Imported from xiaomi open-source tree
+
 endmenu
