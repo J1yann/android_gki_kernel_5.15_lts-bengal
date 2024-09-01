@@ -782,6 +782,7 @@ static int __elevator_change(struct request_queue *q, const char *name)
 static inline bool task_is_booster(struct task_struct *tsk)
 {
 	char comm[sizeof(tsk->comm)];
+
 	get_task_comm(comm, tsk);
 	return !strcmp(comm, "init") || !strcmp(comm, "NodeLooperThrea") ||
 	       !strcmp(comm, "power@1.2-servi") ||
