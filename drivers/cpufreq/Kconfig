@@ -118,8 +118,6 @@ config CPU_FREQ_DEFAULT_GOV_SCHEDHORIZON
 	depends on SMP
 	select CPU_FREQ_GOV_SCHEDHORIZON
 	select CPU_FREQ_GOV_PERFORMANCE
-	select CPU_FREQ_GOV_SCHEDUTIL
-	select UCLAMP_TASK
 	help
 	  Use the 'schedhorizon' CPUFreq governor by default. If unsure,
 	  have a look at the help section of that governor. The fallback
