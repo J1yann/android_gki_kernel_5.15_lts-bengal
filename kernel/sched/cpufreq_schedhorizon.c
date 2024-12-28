@@ -14,8 +14,8 @@
 #include <trace/events/power.h>
 #include <trace/hooks/sched.h>
 
-static unsigned int default_efficient_freq[] = {0};
-static u64 default_up_delay[] = {0};
+static unsigned int default_efficient_freq[] = {1248000, 1401600};
+static u64 default_up_delay[] = {50, 60};
 
 struct sugov_tunables {
 	struct gov_attr_set	attr_set;
