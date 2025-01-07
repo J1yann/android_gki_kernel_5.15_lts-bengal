@@ -54,9 +54,6 @@ scm_version() {
                 echo "+"
                 return
             fi
-            if atag="$(git describe 2>/dev/null)"; then
-                echo "$atag" | awk -F- '{printf("-%05d", $(NF-1))}'
-            fi
             printf '%s%s' -g "$(echo $head | cut -c1-12)"
         elif $save_tag; then
             printf '%s' - "$(echo $tag)"
