@@ -829,30 +829,25 @@ void __exit lirc_dev_exit(void)
 
 struct rc_dev *rc_dev_get_from_fd(int fd)
 {
-	struct fd f = fdget(fd);
-	struct lirc_fh *fh;
-	struct rc_dev *dev;
+    struct fd f = fdget(fd);
+    struct lirc_fh *fh;
+    struct rc_dev *dev;
 
-	if (!f.file)
-		return ERR_PTR(-EBADF);
+    if (!f.file)
+        return ERR_PTR(-EBADF);
 
-	if (f.file->f_op != &lirc_fops) {
-		fdput(f);
-		return ERR_PTR(-EINVAL);
-	}
+    if (f.file->f_op != &lirc_fops) {
+        fdput(f);
+        return ERR_PTR(-EINVAL);
+    }
 
-	if (write && !(f.file->f_mode & FMODE_WRITE)) {
-		fdput(f);
-		return ERR_PTR(-EPERM);
-	}
+    fh = f.file->private_data;
+    dev = fh->rc;
 
-	fh = f.file->private_data;
-	dev = fh->rc;
+    get_device(&dev->dev);
+    fdput(f);
 
-	get_device(&dev->dev);
-	fdput(f);
-
-	return dev;
+    return dev;
 }
 
 MODULE_ALIAS("lirc_dev");

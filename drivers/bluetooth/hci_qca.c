@@ -1329,7 +1329,7 @@ static int qca_set_baudrate(struct hci_dev *hdev, uint8_t baudrate)
 	case QCA_WCN3991:
 	case QCA_WCN3998:
 	case QCA_WCN6750:
-	case QCA_WCN6855:
+	
 		usleep_range(1000, 10000);
 		break;
 
@@ -1414,7 +1414,7 @@ static int qca_check_speeds(struct hci_uart *hu)
 	case QCA_WCN3991:
 	case QCA_WCN3998:
 	case QCA_WCN6750:
-	case QCA_WCN6855:
+	
 		if (!qca_get_speed(hu, QCA_INIT_SPEED) &&
 		    !qca_get_speed(hu, QCA_OPER_SPEED))
 			return -EINVAL;
@@ -1455,7 +1455,7 @@ static int qca_set_speed(struct hci_uart *hu, enum qca_speed_type speed_type)
 		case QCA_WCN3991:
 		case QCA_WCN3998:
 		case QCA_WCN6750:
-		case QCA_WCN6855:
+		
 			hci_uart_set_flow_control(hu, true);
 			break;
 
@@ -1488,7 +1488,7 @@ error:
 		case QCA_WCN3991:
 		case QCA_WCN3998:
 		case QCA_WCN6750:
-		case QCA_WCN6855:
+		
 			hci_uart_set_flow_control(hu, false);
 			break;
 
@@ -1758,7 +1758,7 @@ static int qca_power_on(struct hci_dev *hdev)
 	case QCA_WCN3991:
 	case QCA_WCN3998:
 	case QCA_WCN6750:
-	case QCA_WCN6855:
+	
 		ret = qca_regulator_init(hu);
 		break;
 
@@ -1816,7 +1816,7 @@ static int qca_setup(struct hci_uart *hu)
 		soc_name = "wcn6750";
 		break;
 
-	case QCA_WCN6855:
+	
 		soc_name = "wcn6855";
 		break;
 
@@ -1840,7 +1840,7 @@ retry:
 	case QCA_WCN3991:
 	case QCA_WCN3998:
 	case QCA_WCN6750:
-	case QCA_WCN6855:
+	
 		set_bit(HCI_QUIRK_USE_BDADDR_PROPERTY, &hdev->quirks);
 
 		ret = qca_read_soc_version(hdev, &ver, soc_type);
@@ -1868,7 +1868,7 @@ retry:
 	case QCA_WCN3991:
 	case QCA_WCN3998:
 	case QCA_WCN6750:
-	case QCA_WCN6855:
+	
 		break;
 
 	default:
@@ -2048,7 +2048,7 @@ static void qca_power_shutdown(struct hci_uart *hu)
 		break;
 
 	case QCA_WCN6750:
-	case QCA_WCN6855:
+	
 		gpiod_set_value_cansleep(qcadev->bt_en, 0);
 		msleep(100);
 		qca_regulator_disable(qcadev);
@@ -2194,7 +2194,7 @@ static int qca_serdev_probe(struct serdev_device *serdev)
 	case QCA_WCN3991:
 	case QCA_WCN3998:
 	case QCA_WCN6750:
-	case QCA_WCN6855:
+	
 		qcadev->bt_power = devm_kzalloc(&serdev->dev,
 						sizeof(struct qca_power),
 						GFP_KERNEL);
@@ -2298,7 +2298,7 @@ static void qca_serdev_remove(struct serdev_device *serdev)
 	case QCA_WCN3991:
 	case QCA_WCN3998:
 	case QCA_WCN6750:
-	case QCA_WCN6855:
+	
 		if (power->vregs_on) {
 			qca_power_shutdown(&qcadev->serdev_hu);
 			break;

@@ -26,7 +26,6 @@ static void dwc3_xhci_plat_start(struct usb_hcd *hcd)
 	pdev = to_platform_device(hcd->self.controller);
 	dwc = dev_get_drvdata(pdev->dev.parent);
 
-	dwc3_enable_susphy(dwc, true);
 }
 
 static const struct xhci_plat_priv dwc3_xhci_plat_quirk = {
@@ -157,7 +156,6 @@ err:
 
 void dwc3_host_exit(struct dwc3 *dwc)
 {
-	dwc3_enable_susphy(dwc, false);
 	platform_device_unregister(dwc->xhci);
 	dwc->xhci = NULL;
 }
