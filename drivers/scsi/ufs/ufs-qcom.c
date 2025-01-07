@@ -759,11 +759,8 @@ static void ufs_qcom_select_unipro_mode(struct ufs_qcom_host *host)
 		   ufs_qcom_cap_qunipro(host) ? QUNIPRO_SEL : 0,
 		   REG_UFS_CFG1);
 
-	if (host->hw_ver.major == 0x05)
+	if (host->hw_ver.major >= 0x05)
 		ufshcd_rmwl(host->hba, QUNIPRO_G4_SEL, 0, REG_UFS_CFG0);
-
-	/* make sure above configuration is applied before we return */
-	mb();
 }
 
 /*
@@ -925,64 +922,7 @@ static int ufs_qcom_enable_hw_clk_gating(struct ufs_hba *hba)
 			UNUSED_UNIPRO_CLK_GATED, UFS_AH8_CFG);
 
 	/* Ensure that HW clock gating is enabled before next operations */
-	mb();
-
-	/* Enable Qunipro internal clock gating if supported */
-	if (!ufs_qcom_cap_qunipro_clk_gating(host))
-		goto out;
-
-	/* Enable all the mask bits */
-	err = ufshcd_dme_rmw(hba, DL_VS_CLK_CFG_MASK,
-				DL_VS_CLK_CFG_MASK, DL_VS_CLK_CFG);
-	if (err)
-		goto out;
-
-	err = ufshcd_dme_rmw(hba, PA_VS_CLK_CFG_REG_MASK,
-				PA_VS_CLK_CFG_REG_MASK, PA_VS_CLK_CFG_REG);
-	if (err)
-		goto out;
-
-	if (!((host->hw_ver.major == 4) && (host->hw_ver.minor == 0) &&
-	     (host->hw_ver.step == 0))) {
-		err = ufshcd_dme_rmw(hba, DME_VS_CORE_CLK_CTRL_DME_HW_CGC_EN,
-					DME_VS_CORE_CLK_CTRL_DME_HW_CGC_EN,
-					DME_VS_CORE_CLK_CTRL);
-	} else {
-		ufs_qcom_msg(ERR, hba->dev, "%s: skipping DME_HW_CGC_EN set\n",
-			__func__);
-	}
-out:
-	return err;
-}
-
-static void ufs_qcom_force_mem_config(struct ufs_hba *hba)
-{
-	struct ufs_clk_info *clki;
-
-	/*
-	 * Configure the behavior of ufs clocks core and peripheral
-	 * memory state when they are turned off.
-	 * This configuration is required to allow retaining
-	 * ICE crypto configuration (including keys) when
-	 * core_clk_ice is turned off, and powering down
-	 * non-ICE RAMs of host controller.
-	 *
-	 * This is applicable only to gcc clocks.
-	 */
-	list_for_each_entry(clki, &hba->clk_list_head, list) {
-
-		/* skip it for non-gcc (rpmh) clocks */
-		if (!strcmp(clki->name, "ref_clk"))
-			continue;
-
-		if (!strcmp(clki->name, "core_clk_ice") ||
-			!strcmp(clki->name, "core_clk_ice_hw_ctl"))
-			qcom_clk_set_flags(clki->clk, CLKFLAG_RETAIN_MEM);
-		else
-			qcom_clk_set_flags(clki->clk, CLKFLAG_NORETAIN_MEM);
-		qcom_clk_set_flags(clki->clk, CLKFLAG_NORETAIN_PERIPH);
-		qcom_clk_set_flags(clki->clk, CLKFLAG_PERIPH_OFF_CLEAR);
-	}
+	ufshcd_readl(hba, REG_UFS_CFG2);
 }
 
 static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
@@ -1111,7 +1051,7 @@ static int __ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear,
 		 * make sure above write gets applied before we return from
 		 * this function.
 		 */
-		mb();
+		ufshcd_readl(hba, REG_UFS_SYS1CLK_1US);
 	}
 
 	if (ufs_qcom_cap_qunipro(host))
@@ -1177,9 +1117,9 @@ static int __ufs_qcom_cfg_timers(struct ufs_hba *hba, u32 gear,
 		mb();
 	}
 
-	if (update_link_startup_timer) {
+	if (update_link_startup_timer && host->hw_ver.major != 0x5) {
 		ufshcd_writel(hba, ((core_clk_rate / MSEC_PER_SEC) * 100),
-			      REG_UFS_PA_LINK_STARTUP_TIMER);
+			      REG_UFS_CFG0);
 		/*
 		 * make sure that this configuration is applied before
 		 * we return

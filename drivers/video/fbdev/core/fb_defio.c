@@ -91,7 +91,11 @@ static vm_fault_t fb_deferred_io_mkwrite(struct vm_fault *vmf)
 	struct page *page = vmf->page;
 	struct fb_info *info = vmf->vma->vm_private_data;
 	struct fb_deferred_io *fbdefio = info->fbdefio;
-	struct page *cur;
+	struct fb_deferred_io_pageref *pageref;
+	unsigned long offset;
+	vm_fault_t ret;
+
+	offset = vmf->pgoff << PAGE_SHIFT;
 
 	/* this is a callback we get when userspace first tries to
 	write to the page. we schedule a workqueue. that workqueue
