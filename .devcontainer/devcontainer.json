@@ -1,6 +1,6 @@
 {
-  "name": "Ubuntu 24 DevContainer",
-  "image": "ubuntu:24.04",
+  "name": "Ubuntu 22.04 DevContainer",
+  "image": "ubuntu:22.04",
   "features": {
     "ghcr.io/devcontainers/features/common-utils:1": {}
   },
