@@ -1,0 +1,17 @@
+{
+  "name": "Ubuntu 24 DevContainer",
+  "image": "ubuntu:24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      },
+      "extensions": []
+    }
+  },
+  "postCreateCommand": "sudo apt-get update && sudo apt-get upgrade -y",
+  "remoteUser": "vscode"
+}
